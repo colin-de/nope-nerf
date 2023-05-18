@@ -3,7 +3,7 @@ model:
   freeze_network: False
   use_image_feature: False
   network_type: official
-  occ_activation: softplus
+  occ_activation: softplus #replacing ReLU activation function
   hidden_dim: 256
   pos_enc_levels: 10
   dir_enc_levels: 4
@@ -105,7 +105,7 @@ training:
   log_scale_shift_per_view: False
   with_auto_mask: False
   vis_geo: True
-  vis_resolution: [54, 96]
+  vis_resolution: [540, 960]
   mode: train
   with_ssim: False
   use_gt_depth: False

@@ -27,23 +27,19 @@ def train(cfg):
 
     # params
     out_dir = cfg['training']['out_dir']
-    backup_every = cfg['training']['backup_every']
-    
+    backup_every = cfg['training']['backup_every']   
     lr = cfg['training']['learning_rate']
-
     mode = cfg['training']['mode']
     train_loader, train_dataset = dl.get_dataloader(cfg, mode=mode, shuffle=cfg['dataloading']['shuffle'])
     test_loader, _ = dl.get_dataloader(cfg, mode=mode, shuffle=cfg['dataloading']['shuffle'])
     iter_test = iter(test_loader)
-    data_test = next(iter_test)
-    
-
+    data_test = next(iter_test)    
     n_views = train_dataset['img'].N_imgs
+
     # init network
     network_type = cfg['model']['network_type']
     auto_scheduler = cfg['training']['auto_scheduler']
-    scheduling_epoch = cfg['training']['scheduling_epoch']
-    
+    scheduling_epoch = cfg['training']['scheduling_epoch']    
 
     if network_type=='official':
         model = mdl.OfficialStaticNerf(cfg)
@@ -79,8 +75,6 @@ def train(cfg):
         optimizer, 
         milestones=list(range(scheduling_start, scheduling_epoch+scheduling_start, 10)),
         gamma=cfg['training']['scheduler_gamma'], last_epoch=epoch_it)
-    
-    
 
     # init camera extrinsics
     if cfg['pose']['learn_pose']:
@@ -159,9 +153,6 @@ def train(cfg):
                         optimizer_distortion=optimizer_distortion,distortion_net=distortion_net, cfg_all=cfg
                         )
 
-    
-    
-
     logger = SummaryWriter(os.path.join(out_dir, 'logs'))
         
     # init training output
@@ -176,22 +167,18 @@ def train(cfg):
     if not os.path.exists(render_path):
         os.makedirs(render_path)
     
-
-
-    # Print model
+   # Print model
     nparameters = sum(p.numel() for p in nope_nerf.parameters())
     logger_py.info(nope_nerf)
     logger_py.info('Total number of parameters: %d' % nparameters)
     t0b = time.time()
-
-    
+ 
     patient = cfg['training']['patient']
     length_smooth=cfg['training']['length_smooth']
     scheduling_mode = cfg['training']['scheduling_mode']
     psnr_window = []
 
     # torch.autograd.set_detect_anomaly(True)
-
     log_scale_shift_per_view = cfg['training']['log_scale_shift_per_view']
     scale_dict = {}
     shift_dict = {}
