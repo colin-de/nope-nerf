@@ -5,6 +5,7 @@ import torch.utils.data
 import numpy as np
 import torch.nn.functional as F
 
+
 class OfficialStaticNerf(nn.Module):
     def __init__(self, cfg):
         super(OfficialStaticNerf, self).__init__()
@@ -33,8 +34,8 @@ class OfficialStaticNerf(nn.Module):
 
         self.fc_density = nn.Linear(D, 1)
         self.fc_feature = nn.Linear(D, D)
-        self.rgb_layers = nn.Sequential(nn.Linear(D + dir_in_dims, D//2), nn.ReLU())
-        self.fc_rgb = nn.Linear(D//2, 3)
+        self.rgb_layers = nn.Sequential(nn.Linear(D + dir_in_dims, D // 2), nn.ReLU())
+        self.fc_rgb = nn.Linear(D // 2, 3)
 
         self.fc_density.bias.data = torch.tensor([0.1]).float()
         self.sigmoid = nn.Sigmoid()
@@ -42,7 +43,7 @@ class OfficialStaticNerf(nn.Module):
             self.fc_rgb.bias.data = torch.tensor([0.8, 0.8, 0.8]).float()
         else:
             self.fc_rgb.bias.data = torch.tensor([0.02, 0.02, 0.02]).float()
-        
+
     def gradient(self, p, it):
         with torch.enable_grad():
             p.requires_grad_(True)
@@ -66,15 +67,15 @@ class OfficialStaticNerf(nn.Module):
         density = self.fc_density(x)  # (H, W, N_sample, 1)
         return x, density
 
-    def forward(self, p, ray_d=None, only_occupancy=False, return_logits=False,return_addocc=False, 
-        noise=False, it=100000, **kwargs):
+    def forward(self, p, ray_d=None, only_occupancy=False, return_logits=False, return_addocc=False,
+                noise=False, it=100000, **kwargs):
         """
         :param pos_enc: (H, W, N_sample, pos_in_dims)
         :param dir_enc: (H, W, N_sample, dir_in_dims)
         :return: rgb_density (H, W, N_sample, 4)
         """
         x, density = self.infer_occ(p)
-        if self.occ_activation=='softplus':
+        if self.occ_activation == 'softplus':
             density = F.softplus(density)
         else:
             density = density.relu()
@@ -94,7 +95,7 @@ class OfficialStaticNerf(nn.Module):
                 return rgb, density
             else:
                 return rgb
-        
+
 
 def encode_position(input, levels, inc_input):
     """
@@ -111,11 +112,10 @@ def encode_position(input, levels, inc_input):
     # this is already doing 'log_sampling' in the official code.
     result_list = [input] if inc_input else []
     for i in range(levels):
-        temp = 2.0**i * input  # (..., C)
+        temp = 2.0 ** i * input  # (..., C)
         result_list.append(torch.sin(temp))  # (..., C)
         result_list.append(torch.cos(temp))  # (..., C)
 
-    result_list = torch.cat(result_list, dim=-1)  # (..., C*(2L+1)) The list has (2L+1) elements, with (..., C) shape each.
+    result_list = torch.cat(result_list,
+                            dim=-1)  # (..., C*(2L+1)) The list has (2L+1) elements, with (..., C) shape each.
     return result_list  # (..., C*(2L+1))
-
-

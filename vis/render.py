@@ -1,5 +1,3 @@
-
-
 import os
 import sys
 import argparse
@@ -118,4 +116,4 @@ if output_geo:
     imageio.mimwrite(os.path.join(video_out_dir, 'geo.mp4'), geos, fps=30, quality=9)
 
 
-       
+

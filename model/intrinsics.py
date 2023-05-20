@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 
+
 class LearnFocal(nn.Module):
     def __init__(self, req_grad, fx_only, order=2, init_focal=None):
         super(LearnFocal, self).__init__()
@@ -64,7 +65,7 @@ class LearnFocal(nn.Module):
                 fxfy = torch.stack([self.fx, self.fx])
         else:
             if self.order == 2:
-                fxfy = torch.stack([self.fx**2, self.fy**2])
+                fxfy = torch.stack([self.fx ** 2, self.fy ** 2])
             else:
                 fxfy = torch.stack([self.fx, self.fy])
         return fxfy

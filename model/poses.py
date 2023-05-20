@@ -29,9 +29,6 @@ class LearnPose(nn.Module):
         if self.init_c2w is not None:
             c2w = c2w @ self.init_c2w[cam_id]
         return c2w
-    def get_t(self):
-       return self.t
-   
-    
-    
 
+    def get_t(self):
+        return self.t

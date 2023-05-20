@@ -8,17 +8,19 @@ import numpy as np
 import imageio
 import cv2
 from dataloading.common import _load_data, recenter_poses, spherify_poses, load_depths_npz, load_gt_depths
+
 logger = logging.getLogger(__name__)
+
 
 class DataField(object):
     def __init__(self, model_path,
-                 transform=None, 
-                 with_camera=False, 
+                 transform=None,
+                 with_camera=False,
                  with_depth=False,
-                 use_DPT=False, scene_name=[' '], mode='train', spherify=False, 
-                 load_ref_img=False,customized_poses=False,
-                 customized_focal=False,resize_factor=2, depth_net='dpt',crop_size=0, 
-                 random_ref=False,norm_depth=False,load_colmap_poses=True, sample_rate=8, **kwargs):
+                 use_DPT=False, scene_name=[' '], mode='train', spherify=False,
+                 load_ref_img=False, customized_poses=False,
+                 customized_focal=False, resize_factor=2, depth_net='dpt', crop_size=0,
+                 random_ref=False, norm_depth=False, load_colmap_poses=True, sample_rate=8, **kwargs):
         """load images, depth maps, etc.
         Args:
             model_path (str): path of dataset
@@ -48,34 +50,35 @@ class DataField(object):
         self.ref_img = load_ref_img
         self.random_ref = random_ref
         self.sample_rate = sample_rate
-        
+
         load_dir = os.path.join(model_path, scene_name[0])
-        if crop_size!=0:
+        if crop_size != 0:
             depth_net = depth_net + '_' + str(crop_size)
-        poses, bds, imgs, img_names, crop_ratio, focal_crop_factor = _load_data(load_dir, factor=resize_factor, crop_size=crop_size, load_colmap_poses=load_colmap_poses)
+        poses, bds, imgs, img_names, crop_ratio, focal_crop_factor = _load_data(load_dir, factor=resize_factor,
+                                                                                crop_size=crop_size,
+                                                                                load_colmap_poses=load_colmap_poses)
         if load_colmap_poses:
             poses = np.concatenate([poses[:, 1:2, :], -poses[:, 0:1, :], poses[:, 2:, :]], 1)
             poses = np.moveaxis(poses, -1, 0).astype(np.float32)
             bds = np.moveaxis(bds, -1, 0).astype(np.float32)
             bd_factor = 0.75
             # Rescale if bd_factor is provided
-            sc = 1. if bd_factor is None else 1./(bds.min() * bd_factor)
-            poses[:,:3,3] *= sc
+            sc = 1. if bd_factor is None else 1. / (bds.min() * bd_factor)
+            poses[:, :3, 3] *= sc
             bds *= sc
             poses = recenter_poses(poses)
             if spherify:
                 poses, render_poses, bds = spherify_poses(poses, bds)
             input_poses = poses.astype(np.float32)
-            hwf = input_poses[0,:3,-1]
-            self.hwf = input_poses[:,:3,:]
-            input_poses = input_poses[:,:3,:4]
+            hwf = input_poses[0, :3, -1]
+            self.hwf = input_poses[:, :3, :]
+            input_poses = input_poses[:, :3, :4]
             H, W, focal = hwf
             H, W = int(H), int(W)
             poses_tensor = torch.from_numpy(input_poses)
             bottom = torch.FloatTensor([0, 0, 0, 1]).unsqueeze(0)
             bottom = bottom.repeat(poses_tensor.shape[0], 1, 1)
             c2ws_colmap = torch.cat([poses_tensor, bottom], 1)
-            
 
         imgs = np.moveaxis(imgs, -1, 0).astype(np.float32)
         imgs = np.transpose(imgs, (0, 3, 1, 2))
@@ -90,15 +93,15 @@ class DataField(object):
             fx, fy = focal, focal
         fx = fx / focal_crop_factor
         fy = fy / focal_crop_factor
-        
+
         _, _, h, w = imgs.shape
         self.H, self.W, self.focal = h, w, fx
-        self.K = np.array([[2*fx/w, 0, 0, 0], 
-            [0, -2*fy/h, 0, 0],
-            [0, 0, -1, 0],
-            [0, 0, 0, 1]]).astype(np.float32)
+        self.K = np.array([[2 * fx / w, 0, 0, 0],
+                           [0, -2 * fy / h, 0, 0],
+                           [0, 0, -1, 0],
+                           [0, 0, 0, 1]]).astype(np.float32)
         ids = np.arange(imgs.shape[0])
-        i_test = ids[int(sample_rate/2)::sample_rate]
+        i_test = ids[int(sample_rate / 2)::sample_rate]
         i_train = np.array([i for i in ids if i not in i_test])
         self.i_train = i_train
         self.i_test = i_test
@@ -108,19 +111,19 @@ class DataField(object):
 
         if customized_poses:
             c2ws_gt = np.load(os.path.join(load_dir, 'gt_poses.npz'))['poses'].astype(np.float32)
-            T = torch.tensor(np.array([[1, 0, 0, 0],[0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]], dtype=np.float32)) # ScanNet coordinate
+            T = torch.tensor(np.array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]],
+                                      dtype=np.float32))  # ScanNet coordinate
             c2ws_gt = torch.from_numpy(c2ws_gt)
             c2ws = c2ws_gt @ T
         else:
             c2ws = c2ws_colmap
-        
-        
+
         self.N_imgs_train = len(i_train)
         self.N_imgs_test = len(i_test)
-        
+
         pred_depth_path = os.path.join(load_dir, depth_net)
         self.dpt_depth = None
-        if mode in ('train','eval_trained', 'render'):
+        if mode in ('train', 'eval_trained', 'render'):
             self.imgs = imgs[i_train]
             self.c2ws = c2ws[i_train]
             self.N_imgs = len(i_train)
@@ -131,7 +134,7 @@ class DataField(object):
             if with_depth:
                 self.depth = load_gt_depths(image_list_train, load_dir, crop_ratio=crop_ratio)
             self.img_list = image_list_train
-        elif mode=='eval':
+        elif mode == 'eval':
             self.imgs = imgs[i_test]
             self.c2ws = c2ws[i_test]
             if load_colmap_poses:
@@ -140,19 +143,17 @@ class DataField(object):
                 self.depth = load_gt_depths(image_list_test, load_dir, crop_ratio=crop_ratio)
             self.N_imgs = len(i_test)
             self.img_list = image_list_test
-        elif mode=='all':
+        elif mode == 'all':
             self.imgs = imgs
             self.c2ws = c2ws
             if load_colmap_poses:
                 self.c2ws_colmap = c2ws_colmap
             self.N_imgs = len(i_train) + len(i_test)
             if not use_DPT:
-                self.dpt_depth = load_depths_npz(img_names, pred_depth_path,  norm=norm_depth)
+                self.dpt_depth = load_depths_npz(img_names, pred_depth_path, norm=norm_depth)
             if with_depth:
                 self.depth = load_gt_depths(img_names, load_dir, crop_ratio=crop_ratio)
             self.img_list = img_names
-
-       
 
     def load(self, input_idx_img=None):
         ''' Loads the field.
@@ -167,12 +168,13 @@ class DataField(object):
             data_in = self.transform(data_in)
             data['normalised_img'] = data_in['image']
         data['idx'] = idx
+
     def load_ref_img(self, idx, data={}):
         if self.random_ref:
-            if idx==self.N_imgs-1:
-                ref_idx = idx-1
+            if idx == self.N_imgs - 1:
+                ref_idx = idx - 1
             else:
-                ran_idx = random.randint(1, min(self.random_ref, self.N_imgs-idx-1))
+                ran_idx = random.randint(1, min(self.random_ref, self.N_imgs - idx - 1))
                 ref_idx = idx + ran_idx
         image = self.imgs[ref_idx]
         if self.dpt_depth is not None:
@@ -192,17 +194,16 @@ class DataField(object):
     def load_depth(self, idx, data={}):
         depth = self.depth[idx]
         data['depth'] = depth
+
     def load_DPT_depth(self, idx, data={}):
         depth_dpt = self.dpt_depth[idx]
         data['dpt'] = depth_dpt
 
     def load_camera(self, idx, data={}):
         data['camera_mat'] = self.K
-        data['scale_mat'] = np.array([[1, 0, 0, 0], [0, 1, 0, 0],[0, 0, 1, 0],[0, 0, 0, 1]]).astype(np.float32)
+        data['scale_mat'] = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]).astype(np.float32)
         data['idx'] = idx
-    
-   
-        
+
     def load_field(self, input_idx_img=None):
         if input_idx_img is not None:
             idx_img = input_idx_img
@@ -210,7 +211,7 @@ class DataField(object):
             idx_img = 0
         # Load the data
         data = {}
-        if not self.mode =='render':
+        if not self.mode == 'render':
             self.load_image(idx_img, data)
             if self.ref_img:
                 self.load_ref_img(idx_img, data)
@@ -220,10 +221,5 @@ class DataField(object):
                 self.load_DPT_depth(idx_img, data)
         if self.with_camera:
             self.load_camera(idx_img, data)
-        
+
         return data
-
-
-
-
-
