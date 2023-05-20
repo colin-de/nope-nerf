@@ -77,6 +77,8 @@ def get_data_fields(cfg, mode='train'):
         print(dataset_name, 'does not exist')
     fields['img'] = img_field
     return fields
+
+    
 class ResizeImage_mvs(object):
     def __init__(self):
         net_w = net_h = 384

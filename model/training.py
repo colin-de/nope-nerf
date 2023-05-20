@@ -96,7 +96,6 @@ class Trainer(object):
             self.optimizer_distortion.step()
         return loss_dict
 
-    
     def render_visdata(self, data, resolution, it, out_render_path):
         (img, dpt, camera_mat, scale_mat, img_idx) = self.process_data_dict(data)
         h, w = resolution
@@ -160,6 +159,7 @@ class Trainer(object):
                 )
 
         return img_out.astype(np.uint8)
+    
     def process_data_dict(self, data):
         ''' Processes the data dictionary and returns respective tensors
         Args:
@@ -173,6 +173,7 @@ class Trainer(object):
         scale_mat = data.get('img.scale_mat').to(device)
        
         return (img, dpt, camera_mat, scale_mat, img_idx)
+    
     def process_data_reference(self, data):
         ''' Processes the data dictionary and returns respective tensors
         Args:
@@ -183,6 +184,7 @@ class Trainer(object):
         ref_dpts = data.get('img.ref_dpts').to(device).unsqueeze(1)
         ref_idxs = data.get('img.ref_idxs')
         return ( ref_imgs, ref_dpts, ref_idxs)
+    
     def anneal(self, start_weight, end_weight, anneal_start_epoch, anneal_epoches, current):
         """Anneal the weight from start_weight to end_weight
         """
@@ -229,8 +231,6 @@ class Trainer(object):
         kwargs['weights'] = weights
         kwargs['rgb_loss_type'] = rgb_loss_type
 
-       
-
         if self.pose_param_net is not None:
             num_cams = self.pose_param_net.num_cams
             c2w = self.pose_param_net(img_idx)
@@ -259,9 +259,7 @@ class Trainer(object):
         p_full = arange_pixels((h, w), batch_size, device=device)[1]
         p = p_full[:, ray_idx]
         pix = ray_idx
-        
-
-        
+              
         if render_model:
             out_dict = self.model(
                 p, pix, camera_mat, world_mat, scale_mat, 
@@ -284,13 +282,13 @@ class Trainer(object):
                     depth_ref = scale_ref * (depth_ref + shift_ref)
                 else:
                     depth_ref = scale_ref * depth_ref + shift_ref
+                    
             if self.detach_ref_img:
                 c2w_ref = c2w_ref.detach()
                 scale_ref = scale_ref.detach()
                 shift_ref = shift_ref.detach()
                 depth_ref = depth_ref.detach()
             ref_Rt = torch.inverse(c2w_ref).unsqueeze(0)
-            
             
             if img_idx < (num_cams-1):
                 d1 = depth_input

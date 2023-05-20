@@ -14,7 +14,7 @@ class DataField(object):
     def __init__(self, model_path,
                  transform=None, 
                  with_camera=False, 
-                with_depth=False,
+                 with_depth=False,
                  use_DPT=False, scene_name=[' '], mode='train', spherify=False, 
                  load_ref_img=False,customized_poses=False,
                  customized_focal=False,resize_factor=2, depth_net='dpt',crop_size=0, 

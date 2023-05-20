@@ -15,6 +15,8 @@ import model as mdl
 from utils_poses.comp_ate import compute_ATE, compute_rpe
 from model.common import backup,  mse2psnr
 from utils_poses.align_traj import align_ate_c2b_use_a2b
+
+
 def train(cfg):
     logger_py = logging.getLogger(__name__)
 
@@ -86,6 +88,7 @@ def train(cfg):
             init_pose = init_pose.to(device)
         else:
             init_pose = None
+        print('init_pose: ', init_pose)
             
         pose_param_net = mdl.LearnPose(n_views, cfg['pose']['learn_R'], 
                             cfg['pose']['learn_t'], cfg, init_c2w=init_pose).to(device=device)
@@ -128,6 +131,7 @@ def train(cfg):
     if cfg['pose']['learn_focal']:
         if cfg['pose']['init_focal_type']=='gt':
             init_focal=[train_dataset['img'].K[0, 0], -train_dataset['img'].K[1, 1]]
+            print('init_focal: ', init_focal)
         else: 
             init_focal = None
         focal_net = mdl.LearnFocal(cfg['pose']['update_focal'], cfg['pose']['fx_only'], order=cfg['pose']['focal_order'], init_focal=init_focal).to(device=device)
@@ -183,12 +187,16 @@ def train(cfg):
     scale_dict = {}
     shift_dict = {}
     gt_poses = train_dataset['img'].c2ws.to(device)
+    print('scheduling_start: ', scheduling_start)
+    print('scheduling_epoch: ', scheduling_epoch)
     # for epoch_it in tqdm(range(epoch_start+1, exit_after), desc='epochs'):
     while epoch_it < (scheduling_start + scheduling_epoch):
         epoch_it +=1
         L2_loss_epoch = []
         pc_loss_epoch = []
         rgb_s_loss_epoch = []
+        # print('batch in trainloader: ', batch)
+
         for batch in train_loader:
             it += 1
             idx = batch.get('img.idx')
@@ -222,7 +230,7 @@ def train(cfg):
                             data_test, 
                             cfg['training']['vis_resolution'], 
                             it, out_render_path)
-                #logger.add_image('rgb', val_rgb, it)
+                # logger.add_image('rgb', val_rgb, it)
             # Run validation
             if validate_every > 0 and (it % validate_every) == 0:
                 eval_dict = trainer.evaluate(test_loader)
