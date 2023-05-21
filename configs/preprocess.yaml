@@ -4,8 +4,8 @@ dataloading:
   # path: data/nerf_llff_data
   path: data/Tanks
   # scene: ['fern']
-  # scene: ['Ignatius']
-  scene: ['Horse']
+  scene: ['Ignatius']
+  # scene: ['Horse']
   resize_factor: 
   generate_dpt: True
 training:

@@ -62,7 +62,7 @@ def _load_data(basedir, factor=None, width=None, height=None, load_imgs=True, cr
     if load_colmap_poses:
         poses_arr = np.load(os.path.join(basedir, 'poses_bounds.npy'))
         poses = poses_arr[:, :-2].reshape([-1, 3, 5]).transpose([1, 2, 0])  # 3 x 5 x N
-        bds = poses_arr[:, -2:].transpose([1, 0])
+        bds = poses_arr[:, -2:].transpose([1, 0]) # loading bounds
     img_folder = 'images'
     crop_ratio = 1
     focal_crop_factor = 1
@@ -248,7 +248,7 @@ def load_gt_depths(image_list, datadir, H=None, W=None, crop_ratio=1):
     depths = []
     for image_name in image_list:
         frame_id = image_name.split('.')[0]
-        depth_path = os.path.join(datadir, 'depth', '{}.png'.format(frame_id))
+        depth_path = os.path.join(datadir, 'dpt', '{}.png'.format(frame_id))
         depth = cv2.imread(depth_path, cv2.IMREAD_UNCHANGED)
         depth = depth.astype(np.float32) / 1000
         if crop_ratio != 1:

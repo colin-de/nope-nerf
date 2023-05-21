@@ -111,6 +111,7 @@ def train(cfg):
     else:
         optimizer_pose = None
         pose_param_net = None
+        
     # init distortion parameters
     if cfg['distortion']['learn_distortion']:
         distortion_net = mdl.Learn_Distortion(n_views, cfg['distortion']['learn_scale'],

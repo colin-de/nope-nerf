@@ -11,7 +11,7 @@
             "python": "/home/workstationpatrick/anaconda3/envs/nope-nerf/bin/python",
             "program": "${workspaceFolder}/train.py",
             "console": "integratedTerminal",
-            "args": ["configs/Tanks/Ignatius.yaml"],
+            "args": ["configs/Tanks/Ignatius_depth_pose_init.yaml"],
             "cwd": "${workspaceFolder}"
         }
     ]

@@ -64,6 +64,8 @@ class Renderer(nn.Module):
         )
         ray_vector = (pixels_world - camera_world)
         ray_vector_norm = ray_vector.norm(2, 2)
+        # ray_vector [batch_size, n_points, 3], ray_vector.norm(2, 2) [batch_size, n_points]. 
+        # After unsqueeze(-1), it will be [batch_size, n_points, 1]
         if normalise_ray:
             ray_vector = ray_vector / ray_vector.norm(2, 2).unsqueeze(-1)  # normalised ray vector
         else:
@@ -80,19 +82,20 @@ class Renderer(nn.Module):
         dists = torch.ones_like(d_i).to(device)
         dists[mask_pred] = d_i[mask_pred]
         dists[mask_zero_occupied] = 0.
+        # bitwise AND between mask_pred and the negation of mask_zero_occupied.
         network_object_mask = mask_pred & ~mask_zero_occupied
 
         network_object_mask = network_object_mask[0]
         dists = dists[0]
 
         # Project depth to 3d poinsts
-        camera_world = camera_world.reshape(-1, 3)
+        camera_world = camera_world.reshape(-1, 3) # (B, N, 3) -> (B*N, 3)
         ray_vector = ray_vector.reshape(-1, 3)
 
-        points = camera_world + ray_vector * dists.unsqueeze(-1)
-        points = points.view(-1, 3)
-        z_val = torch.linspace(0., 1., steps=full_steps - outside_steps, device=device)
-        z_val = z_val.view(1, 1, -1).repeat(batch_size, n_points, 1)
+        points = camera_world + ray_vector * dists.unsqueeze(-1) 
+        points = points.view(-1, 3) # (B*N, 3)
+        z_val = torch.linspace(0., 1., steps=full_steps - outside_steps, device=device) # sample 128 steps
+        z_val = z_val.view(1, 1, -1).repeat(batch_size, n_points, 1) # (batch_s, n_ts, full_steps - outside_steps)
 
         if sample_option == 'ndc':
             z_val, pts, ray_vector_fg = self.sample_ndc(camera_mat, camera_world, ray_vector, z_val,
@@ -103,8 +106,9 @@ class Renderer(nn.Module):
         if not use_dir:
             ray_vector_fg = torch.ones_like(ray_vector_fg)
         # Run Network
-        noise = not eval_
-        rgb_fg, logits_alpha_fg = [], []
+        noise = not eval_ # add noise in training
+        rgb_fg, logits_alpha_fg = [], [] 
+        # store the intermediate results of RGB and alpha for each batch of sampled pts.
         for i in range(0, pts.shape[0], n_max_network_queries):
             rgb_i, logits_alpha_i = self.model(
                 pts[i:i + n_max_network_queries],
@@ -114,7 +118,8 @@ class Renderer(nn.Module):
             rgb_fg.append(rgb_i)
             logits_alpha_fg.append(logits_alpha_i)
         rgb_fg = torch.cat(rgb_fg, dim=0)
-        logits_alpha_fg = torch.cat(logits_alpha_fg, dim=0)
+        logits_alpha_fg = torch.cat(logits_alpha_fg, dim=0) 
+        # logits (unnormalized prob.) alpha of the rendered points.
 
         rgb = rgb_fg.reshape(batch_size * n_points, full_steps, 3)
         alpha = logits_alpha_fg.view(batch_size * n_points, full_steps)

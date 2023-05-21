@@ -1,0 +1,21 @@
+depth:
+  type: None
+pose:
+  learn_pose: True
+  init_pose: True # Pose init
+  learn_focal: False
+  update_focal: True
+  init_pose_type: colmap
+  init_focal_type: gt
+dataloading:
+  path: data/Tanks
+  scene: ['Ignatius']
+  n_workers: 4
+  with_depth: True # Depth init
+  customized_focal: False
+  random_ref: 1
+training:
+  out_dir:  out/Tanks/Ignatius_d_p_init
+  auto_scheduler: True
+extract_images:
+  resolution: [540, 960]

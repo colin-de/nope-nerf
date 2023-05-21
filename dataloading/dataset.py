@@ -70,18 +70,19 @@ class DataField(object):
             if spherify:
                 poses, render_poses, bds = spherify_poses(poses, bds)
             input_poses = poses.astype(np.float32)
-            hwf = input_poses[0, :3, -1]
-            self.hwf = input_poses[:, :3, :]
-            input_poses = input_poses[:, :3, :4]
+            hwf = input_poses[0, :3, -1] # first input pose Mat height, width, focal length
+            self.hwf = input_poses[:, :3, :] # every input pose Mat
+            input_poses = input_poses[:, :3, :4] # results in 3x4 matrices
             H, W, focal = hwf
             H, W = int(H), int(W)
             poses_tensor = torch.from_numpy(input_poses)
             bottom = torch.FloatTensor([0, 0, 0, 1]).unsqueeze(0)
             bottom = bottom.repeat(poses_tensor.shape[0], 1, 1)
-            c2ws_colmap = torch.cat([poses_tensor, bottom], 1)
+            c2ws_colmap = torch.cat([poses_tensor, bottom], 1) # 3x4 -> 4x4
 
-        imgs = np.moveaxis(imgs, -1, 0).astype(np.float32)
-        imgs = np.transpose(imgs, (0, 3, 1, 2))
+        # imgs array from (H, W, C, N) to (N, C, H, W),
+        imgs = np.moveaxis(imgs, -1, 0).astype(np.float32) # HWC N -> N HWC
+        imgs = np.transpose(imgs, (0, 3, 1, 2)) # NHWC -> NCHW
 
         if customized_focal:
             focal_gt = np.load(os.path.join(load_dir, 'intrinsics.npz'))['K'].astype(np.float32)
@@ -94,7 +95,7 @@ class DataField(object):
         fx = fx / focal_crop_factor
         fy = fy / focal_crop_factor
 
-        _, _, h, w = imgs.shape
+        _, _, h, w = imgs.shape # imgs (N, C, H, W) 
         self.H, self.W, self.focal = h, w, fx
         self.K = np.array([[2 * fx / w, 0, 0, 0],
                            [0, -2 * fy / h, 0, 0],
@@ -132,7 +133,7 @@ class DataField(object):
             if not use_DPT:
                 self.dpt_depth = load_depths_npz(image_list_train, pred_depth_path, norm=norm_depth)
             if with_depth:
-                self.depth = load_gt_depths(image_list_train, load_dir, crop_ratio=crop_ratio)
+                self.depth = load_gt_depths(image_list_train, load_dir, crop_ratio=crop_ratio) # DPT png
             self.img_list = image_list_train
         elif mode == 'eval':
             self.imgs = imgs[i_test]
