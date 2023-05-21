@@ -10,6 +10,7 @@ sys.path.append(os.path.join(sys.path[0], '..'))
 from dataloading import get_dataloader, load_config
 import model as mdl
 
+
 def dpt_depth(cfg, depth_save_dir):
     torch.manual_seed(0)
     is_cuda = (torch.cuda.is_available())
@@ -17,7 +18,7 @@ def dpt_depth(cfg, depth_save_dir):
 
     # Model
     network_type = cfg['model']['network_type']
-    if network_type=='official':
+    if network_type == 'official':
         model = mdl.OfficialStaticNerf(cfg)
     rendering_cfg = cfg['rendering']
     renderer = mdl.Renderer(model, rendering_cfg, device=device)
@@ -28,30 +29,28 @@ def dpt_depth(cfg, depth_save_dir):
     nope_nerf.eval()
     DPT_model = nope_nerf.depth_estimator.to(device)
 
-
     if not os.path.exists(depth_save_dir):
         os.makedirs(depth_save_dir)
     img_list = train_dataset['img'].img_list
-    
-    for data in train_loader:   
+
+    for data in train_loader:
         img_normalised = data.get('img.normalised_img').to(device)
         idx = data.get('img.idx')
         img_name = img_list[idx]
         depth = DPT_model(img_normalised)
         np.savez(os.path.join(depth_save_dir, 'depth_{}.npz'.format(img_name.split('.')[0])), pred=depth.detach().cpu())
         imageio.imwrite(os.path.join(depth_save_dir, '{}.png'.format(img_name.split('.')[0])), depth[0].detach().cpu())
-        
- 
-                                                                
-if __name__=='__main__':
+
+
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Preprocess.'
     )
-    parser.add_argument('config', type=str,default='configs/preprocess.yaml', help='Path to config file.')
+    parser.add_argument('config', type=str, default='configs/preprocess.yaml', help='Path to config file.')
     args = parser.parse_args()
     cfg = load_config(args.config, 'configs/default.yaml')
-    if cfg['dataloading']['crop_size'] !=0:
-        folder_name= 'dpt_' + str(cfg['dataloading']['crop_size'])
+    if cfg['dataloading']['crop_size'] != 0:
+        folder_name = 'dpt_' + str(cfg['dataloading']['crop_size'])
     else:
         folder_name = 'dpt'
     depth_save_dir = os.path.join(cfg['dataloading']['path'], cfg['dataloading']['scene'][0], folder_name)

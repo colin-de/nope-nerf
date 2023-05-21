@@ -32,7 +32,7 @@ pose:
   update_focal: True
   fx_only: False
   focal_order: 2
-  init_pose_type: colmap
+  init_pose_type: gt
   init_focal_type: gt
 dataloading:
   path: data/Tanks
@@ -46,7 +46,7 @@ training:
   load_pose_dir: model_pose.pt
   load_focal_dir: model_focal.pt
   load_distortion_dir: model_distortion.pt
-  n_training_points: 1024
+  n_training_points: 512
   scheduling_epoch: 10000
   batch_size: 1
   learning_rate: 0.001

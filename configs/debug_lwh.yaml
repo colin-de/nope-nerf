@@ -1,5 +1,12 @@
-depth:
-  type: None
+model:
+  num_layers: 8
+  freeze_network: False
+  use_image_feature: False
+  network_type: official
+  occ_activation: softplus #replacing ReLU activation function
+  hidden_dim: 128
+  pos_enc_levels: 10
+  dir_enc_levels: 4
 dataloading:
   dataset_name: any
   path: 
@@ -22,31 +29,52 @@ dataloading:
   load_colmap_poses: True
   shuffle: True
   sample_rate: 8
+
+rendering:
+  type: nope_nerf # changed
+  n_max_network_queries: 64000
+  white_background: False
+  radius: 4.0
+  num_points: 128
+  depth_range: [0.01, 10]
+  dist_alpha: False
+  use_ray_dir: True
+  normalise_ray: True
+  normal_loss: False
+  sample_option: uniform
+  outside_steps: 0
+depth:
+  type: None
+  path: DPT/dpt_hybrid-midas-501f0c75.pt
+  non_negative: True
+  scale: 0.000305
+  shift: 0.1378
+  invert: True
+  freeze: True
 pose:
-  learn_pose: True
+  learn_pose: False
   learn_R: True
   learn_t: True
-  init_pose: True
+  init_pose: False
   init_R_only: False
   learn_focal: False
   update_focal: True
   fx_only: False
   focal_order: 2
-  init_pose_type: colmap
+  init_pose_type: gt
   init_focal_type: gt
-dataloading:
-  path: data/Tanks
-  scene: ['Ignatius']
-  customized_focal: False
-  random_ref: 1
+distortion:
+  learn_distortion: True
+  fix_scaleN: True
+  learn_scale: True
+  learn_shift: True
 training:
-  out_dir:  out/Tanks/Ignatius_colmap
   type: nope_nerf
   load_dir: model.pt
   load_pose_dir: model_pose.pt
   load_focal_dir: model_focal.pt
   load_distortion_dir: model_distortion.pt
-  n_training_points: 1024
+  n_training_points: 512
   scheduling_epoch: 10000
   batch_size: 1
   learning_rate: 0.001
@@ -110,5 +138,13 @@ extract_images:
   model_file_focal: model_focal.pt
   eval_depth: False
   bspline_degree: 100
-extract_images:
-  resolution: [540, 960]
+eval_pose:
+  n_points: 1024
+  type: nope_nerf
+  type_to_eval: eval
+  opt_pose_epoch: 1000
+  extraction_dir: extraction
+  init_method: pre
+  opt_eval_lr: 0.001
+
+
