@@ -45,21 +45,21 @@ class Trainer(object):
         self.rendering_technique = cfg['type']
         self.vis_geo = cfg['vis_geo']
 
-        self.detach_gt_depth = cfg['detach_gt_depth']
-        self.pc_ratio = cfg['pc_ratio']
-        self.match_method = cfg['match_method']
+        self.detach_gt_depth = cfg['detach_gt_depth'] # detach depth loss from gradient
+        self.pc_ratio = cfg['pc_ratio'] # percentage of points to be sampled from the generated point cloud
+        self.match_method = cfg['match_method'] # dense
         self.shift_first = cfg['shift_first']
-        self.detach_ref_img = cfg['detach_ref_img']
-        self.scale_pcs = cfg['scale_pcs']
-        self.detach_rgbs_scale = cfg['detach_rgbs_scale']
+        self.detach_ref_img = cfg['detach_ref_img'] # detach img loss from gradient
+        self.scale_pcs = cfg['scale_pcs'] # scaling point cloud
+        self.detach_rgbs_scale = cfg['detach_rgbs_scale'] # detach the RGB values of the scaled point clouds
         self.vis_reprojection_every = cfg['vis_reprojection_every']
         self.nearest_limit = cfg['nearest_limit']
         self.annealing_epochs = cfg['annealing_epochs']
 
-        self.pc_weight = cfg['pc_weight']
-        self.rgb_s_weight = cfg['rgb_s_weight']
-        self.rgb_weight = cfg['rgb_weight']
-        self.depth_weight = cfg['depth_weight']
+        self.pc_weight = cfg['pc_weight'] # [1.0, 0.0]
+        self.rgb_s_weight = cfg['rgb_s_weight'] # [1.0, 0.0]
+        self.rgb_weight = cfg['rgb_weight'] # [1.0, 1.0]
+        self.depth_weight = cfg['depth_weight'] # [0.04, 0.0]
         self.weight_dist_2nd_loss = cfg['weight_dist_2nd_loss']
         self.weight_dist_1st_loss = cfg['weight_dist_1st_loss']
         self.depth_consistency_weight = cfg['depth_consistency_weight']

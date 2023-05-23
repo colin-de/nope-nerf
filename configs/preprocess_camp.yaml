@@ -1,0 +1,9 @@
+depth:
+  type: DPT
+dataloading:
+  path: data/TUM_CAMP
+  scene: ['scene1_50']
+  resize_factor: 
+  generate_dpt: True
+training:
+  mode: 'all'

@@ -5,7 +5,7 @@ pose:
   init_pose: True # Pose init
   learn_focal: False
   update_focal: True
-  init_pose_type: colmap
+  init_pose_type: gt
   init_focal_type: gt
 dataloading:
   path: data/Tanks

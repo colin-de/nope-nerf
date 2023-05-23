@@ -372,7 +372,7 @@ if __name__ == '__main__':
     )
     parser.add_argument('config', type=str, help='Path to config file.')
     args = parser.parse_args()
-    cfg = dl.load_config(args.config, 'configs/debug_lwh.yaml')
+    cfg = dl.load_config(args.config, 'configs/default_camp.yaml')
     # backup model
     backup(cfg['training']['out_dir'], args.config)
     train(cfg=cfg)

@@ -1,0 +1,15 @@
+depth:
+  type: None
+pose:
+  learn_pose: True
+  init_pose: False # Pose init
+dataloading:
+  path: data/TUM_CAMP
+  scene: ['scene1_50']
+  customized_focal: False
+  random_ref: 1
+training:
+  out_dir:  out/TUM_CAMP/scene1_50
+  auto_scheduler: True
+extract_images:
+  resolution: [913, 1138]

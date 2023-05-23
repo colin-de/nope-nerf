@@ -20,7 +20,7 @@ class Loss(nn.Module):
     def __init__(self, cfg=None):
         super().__init__()
 
-        self.depth_loss_type = cfg['depth_loss_type']
+        self.depth_loss_type = cfg['depth_loss_type'] # l1 loss
 
         self.l1_loss = nn.L1Loss(reduction='sum')
         self.l2_loss = nn.MSELoss(reduction='sum')
@@ -159,10 +159,11 @@ class Loss(nn.Module):
         eng = torch.mean(pt_pt_dist)
         return eng
 
+    # surface-based photometric loss
     def get_rgb_s_loss(self, rgb1, rgb2, valid_points):
         diff_img = (rgb1 - rgb2).abs()
         diff_img = diff_img.clamp(0, 1)
-        if self.cfg['with_ssim'] == True:
+        if self.cfg['with_ssim'] == True: # False
             ssim_map = compute_ssim_loss(rgb1, rgb2)
             diff_img = (0.15 * diff_img + 0.85 * ssim_map)
         loss = self.mean_on_mask(diff_img, valid_points)
